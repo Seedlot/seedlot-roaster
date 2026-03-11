@@ -1,0 +1,70 @@
+@import "tailwindcss";
+
+@theme inline {
+  /* Seedlot brand colors */
+  --color-forest: #2B3625;
+  --color-deep-green: #3D5A3D;
+  --color-accent: #9DFF00;
+  --color-accent-dark: #7ACC00;
+  --color-terracotta: #B25518;
+  --color-terracotta-dark: #8C4313;
+  --color-coffee: #6B4423;
+  --color-charcoal: #2D2D2D;
+  --color-cream: #F5F1EB;
+  --color-light-gray: #EBEBEB;
+  --color-off-white: #F5F5F5;
+
+  --color-grey-5: #F9FAFB;
+  --color-grey-10: #F3F4F6;
+  --color-grey-20: #E5E7EB;
+  --color-grey-30: #D1D5DB;
+  --color-grey-40: #9CA3AF;
+  --color-grey-50: #6B7280;
+  --color-grey-60: #4B5563;
+  --color-grey-70: #374151;
+  --color-grey-80: #1F2937;
+  --color-grey-90: #111827;
+
+  --font-heading: "Bayon", sans-serif;
+  --font-body: "Kumbh Sans", sans-serif;
+}
+
+body {
+  background: var(--color-off-white);
+  color: var(--color-charcoal);
+  font-family: var(--font-body);
+}
+
+/* Wizard layout */
+.wizard-shell {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+.wizard-content {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Hide scrollbar for cleaner mobile look */
+.wizard-content::-webkit-scrollbar {
+  display: none;
+}
+.wizard-content {
+  scrollbar-width: none;
+}
+
+/* Print styles for profile export */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  .wizard-shell {
+    min-height: auto;
+  }
+  body {
+    background: white;
+  }
+}
