@@ -43,7 +43,7 @@ export default function SelectRoaster({
             options={BATCH_SIZES as unknown as { id: string; label: string; description: string }[]}
             selected={batchSize}
             onSelect={(id) => onBatchSizeChange(id as BatchSize)}
-            columns={3}
+            columns={4}
           />
         </div>
 

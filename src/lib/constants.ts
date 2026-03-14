@@ -28,6 +28,7 @@ export const VARIETIES = [
 export const BATCH_SIZES = [
   { id: '50', label: '50g', description: 'Standard sample size' },
   { id: '100', label: '100g', description: 'Production evaluation' },
+  { id: '150', label: '150g', description: 'Extended evaluation' },
   { id: '200', label: '200g', description: 'Large batch (uses inlet temperature)' },
 ] as const
 
