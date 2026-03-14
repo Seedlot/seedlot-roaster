@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { buildPrompt } from '@/lib/prompt-builder'
+import { cmsFetch } from '@/lib/cms-fetch'
 import type { WizardState } from '@/lib/types'
 
 export async function POST(req: NextRequest) {
@@ -18,7 +19,7 @@ export async function POST(req: NextRequest) {
   // Try server-side generation via CMS → claude-max-proxy
   if (hasServerKey && cmsUrl && cmsApiKey) {
     try {
-      const cmsRes = await fetch(`${cmsUrl}/api/roaster/generate`, {
+      const cmsRes = await cmsFetch(`${cmsUrl}/api/roaster/generate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

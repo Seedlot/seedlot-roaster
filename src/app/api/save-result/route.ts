@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server'
+import { cmsFetch } from '@/lib/cms-fetch'
 
 const CMS_URL = process.env.NEXT_PUBLIC_CMS_URL || 'https://cms.seedlot.io'
 
@@ -15,7 +16,7 @@ export async function POST(req: NextRequest) {
     headers['x-api-key'] = apiKey
   }
 
-  const res = await fetch(`${CMS_URL}/api/roaster/save-result`, {
+  const res = await cmsFetch(`${CMS_URL}/api/roaster/save-result`, {
     method: 'POST',
     headers,
     body: JSON.stringify(body),

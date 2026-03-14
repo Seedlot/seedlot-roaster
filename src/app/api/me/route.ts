@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
+import { cmsFetch } from '@/lib/cms-fetch'
 
 const CMS_URL = process.env.NEXT_PUBLIC_CMS_URL || 'https://cms.seedlot.io'
 
@@ -10,7 +11,7 @@ export async function GET() {
     return NextResponse.json({ error: 'Not signed in' }, { status: 401 })
   }
 
-  const res = await fetch(`${CMS_URL}/api/roaster/me`, {
+  const res = await cmsFetch(`${CMS_URL}/api/roaster/me`, {
     headers: { Authorization: `Bearer ${token}` },
   })
   const data = await res.json()
@@ -25,7 +26,7 @@ export async function PATCH(req: NextRequest) {
   }
 
   const body = await req.json()
-  const res = await fetch(`${CMS_URL}/api/roaster/me`, {
+  const res = await cmsFetch(`${CMS_URL}/api/roaster/me`, {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',
