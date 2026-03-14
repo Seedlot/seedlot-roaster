@@ -1,7 +1,6 @@
 "use client"
 
 import { useReducer, useCallback, useEffect, useRef } from 'react'
-import { useUser, SignIn } from '@clerk/nextjs'
 import Welcome from '@/components/wizard/welcome'
 import PhotoCapture from '@/components/wizard/photo-capture'
 import DescribeCoffee from '@/components/wizard/describe-coffee'
@@ -80,7 +79,6 @@ function canAdvance(state: WizardState): boolean {
 
 export default function Home() {
   const [state, dispatch] = useReducer(reducer, initialState)
-  const { isSignedIn } = useUser()
   const sessionIdRef = useRef<string>('')
   const stepStartRef = useRef<number>(Date.now())
 
@@ -294,25 +292,12 @@ export default function Home() {
                     </div>
                   )}
                   <div className="flex gap-3">
-                    {isSignedIn ? (
-                      <button
-                        onClick={handleSaveProfile}
-                        className="flex-1 py-3 rounded-xl bg-forest text-white font-bold text-sm uppercase tracking-wider hover:bg-deep-green transition-colors"
-                      >
-                        Save Profile
-                      </button>
-                    ) : (
-                      <div className="flex-1 text-center py-3 text-sm text-grey-50">
-                        <SignIn
-                          routing="hash"
-                          fallbackRedirectUrl="/"
-                          appearance={{
-                            elements: { rootBox: 'mx-auto', card: 'shadow-none' },
-                          }}
-                        />
-                        <p className="mt-2">Sign in to save profiles and track results</p>
-                      </div>
-                    )}
+                    <button
+                      onClick={handleSaveProfile}
+                      className="flex-1 py-3 rounded-xl bg-forest text-white font-bold text-sm uppercase tracking-wider hover:bg-deep-green transition-colors"
+                    >
+                      Save Profile
+                    </button>
                     <button
                       onClick={handleNext}
                       className="flex-1 py-3 rounded-xl border border-grey-20 text-grey-60 font-medium text-sm hover:bg-grey-5 transition-colors"

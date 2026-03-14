@@ -18,7 +18,7 @@ const kumbhSans = Kumbh_Sans({
 export const metadata: Metadata = {
   title: "Seedlot Roaster — AI-Powered Roast Profiles for ROEST",
   description:
-    "Build optimized roast profiles for your ROEST sample roaster using AI. Bring your own Anthropic API key. Free, open source.",
+    "Build optimized roast profiles for your ROEST sample roaster using AI. Free tool by Seedlot.",
   openGraph: {
     title: "Seedlot Roaster — AI-Powered Roast Profiles for ROEST",
     description: "Build optimized roast profiles for your ROEST sample roaster using AI.",
