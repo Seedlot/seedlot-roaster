@@ -9,9 +9,8 @@ type PhotoCaptureProps = {
   savedApiKey: string
 }
 
-export default function PhotoCapture({ onAnalysisComplete, onSkip, savedApiKey }: PhotoCaptureProps) {
+export default function PhotoCapture({ onAnalysisComplete, onSkip }: PhotoCaptureProps) {
   const [photo, setPhoto] = useState<string | null>(null)
-  const [apiKey, setApiKey] = useState(savedApiKey)
   const [analyzing, setAnalyzing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -36,11 +35,6 @@ export default function PhotoCapture({ onAnalysisComplete, onSkip, savedApiKey }
   const handleAnalyze = useCallback(async () => {
     if (!photo) return
 
-    if (!apiKey.trim()) {
-      setError('Enter your Anthropic API key to analyze the photo')
-      return
-    }
-
     setAnalyzing(true)
     setError(null)
 
@@ -48,7 +42,7 @@ export default function PhotoCapture({ onAnalysisComplete, onSkip, savedApiKey }
       const res = await fetch('/api/analyze-green', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ image: photo, apiKey: apiKey.trim() }),
+        body: JSON.stringify({ image: photo }),
       })
 
       if (!res.ok) {
@@ -57,13 +51,13 @@ export default function PhotoCapture({ onAnalysisComplete, onSkip, savedApiKey }
       }
 
       const analysis: VisionAnalysis = await res.json()
-      onAnalysisComplete(analysis, apiKey.trim())
+      onAnalysisComplete(analysis, '')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to analyze photo')
     } finally {
       setAnalyzing(false)
     }
-  }, [photo, apiKey, onAnalysisComplete])
+  }, [photo, onAnalysisComplete])
 
   const handleRetake = useCallback(() => {
     setPhoto(null)
@@ -75,10 +69,10 @@ export default function PhotoCapture({ onAnalysisComplete, onSkip, savedApiKey }
     <div className="px-4 py-6 sm:px-6">
       <div className="max-w-2xl mx-auto">
         <h2 className="font-heading text-2xl sm:text-3xl text-charcoal uppercase tracking-wide text-center mb-1">
-          Green Coffee Photo
+          Coffee Label Photo
         </h2>
         <p className="text-grey-50 text-sm text-center mb-6">
-          Take a photo of your green beans for AI analysis, or skip to enter details manually.
+          Take a photo of your green coffee label or bag for AI analysis, or skip to enter details manually.
         </p>
 
         {!photo ? (
@@ -115,7 +109,7 @@ export default function PhotoCapture({ onAnalysisComplete, onSkip, savedApiKey }
             <div className="relative rounded-2xl overflow-hidden bg-grey-5">
               <img
                 src={photo}
-                alt="Green coffee beans"
+                alt="Coffee label"
                 className="w-full h-56 object-cover"
               />
               <button
@@ -126,25 +120,6 @@ export default function PhotoCapture({ onAnalysisComplete, onSkip, savedApiKey }
                 Retake
               </button>
             </div>
-
-            {/* API Key input (needed for vision analysis) */}
-            {!savedApiKey && (
-              <div>
-                <label className="block text-sm font-medium text-grey-70 mb-1">
-                  Anthropic API Key
-                </label>
-                <input
-                  type="password"
-                  value={apiKey}
-                  onChange={(e) => setApiKey(e.target.value)}
-                  placeholder="sk-ant-..."
-                  className="w-full px-4 py-3 rounded-xl border border-grey-20 bg-white text-charcoal focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent font-mono text-sm"
-                />
-                <p className="text-xs text-grey-40 mt-1">
-                  Your key is used server-side only and never stored.
-                </p>
-              </div>
-            )}
 
             {error && (
               <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
@@ -164,10 +139,10 @@ export default function PhotoCapture({ onAnalysisComplete, onSkip, savedApiKey }
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
                   </svg>
-                  Analyzing with Claude Vision...
+                  Reading label with Gemini...
                 </span>
               ) : (
-                'Analyze Green Coffee'
+                'Analyze Label'
               )}
             </button>
 

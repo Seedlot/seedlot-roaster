@@ -1,6 +1,8 @@
 "use client"
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+
+const hasServerKey = process.env.NEXT_PUBLIC_HAS_SERVER_KEY === 'true'
 
 export default function ApiKeyInput({
   apiKey,
@@ -15,6 +17,32 @@ export default function ApiKeyInput({
 }) {
   const [validating, setValidating] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // Auto-validate when server has a key configured
+  useEffect(() => {
+    if (hasServerKey && !keyValidated) {
+      onKeyValidated(true)
+    }
+  }, [keyValidated, onKeyValidated])
+
+  if (hasServerKey) {
+    return (
+      <div className="px-4 py-6 sm:px-6">
+        <div className="max-w-2xl mx-auto text-center">
+          <h2 className="font-heading text-2xl sm:text-3xl text-charcoal uppercase tracking-wide mb-1">
+            AI Ready
+          </h2>
+          <p className="text-grey-50 text-sm mb-6">
+            Using Seedlot's AI — no API key needed.
+          </p>
+          <div className="p-4 bg-green-50 border border-green-200 rounded-xl">
+            <p className="text-sm text-green-700 font-medium">Server-side AI configured</p>
+            <p className="text-xs text-green-600 mt-1">Claude will generate your roast profile at no cost to you.</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   const validate = async () => {
     if (!apiKey.startsWith('sk-ant-')) {

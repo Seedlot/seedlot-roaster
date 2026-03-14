@@ -114,13 +114,8 @@ export default function Home() {
 
   const handleBack = useCallback(() => dispatch({ type: 'BACK' }), [])
 
-  const handleVisionAnalysis = useCallback((analysis: VisionAnalysis, apiKey: string) => {
+  const handleVisionAnalysis = useCallback((analysis: VisionAnalysis) => {
     dispatch({ type: 'SET_VISION_ANALYSIS', analysis })
-    // Save the API key from photo step so it's pre-filled later
-    if (apiKey) {
-      dispatch({ type: 'SET_API_KEY', key: apiKey })
-      dispatch({ type: 'SET_KEY_VALIDATED', validated: true })
-    }
     // Pre-fill coffee details from vision analysis
     if (analysis.estimatedOrigin) {
       dispatch({ type: 'SET_ORIGIN', origin: analysis.estimatedOrigin })
@@ -239,7 +234,7 @@ export default function Home() {
         )}
         {state.step === 2 && (
           <PhotoCapture
-            savedApiKey={state.apiKey}
+            savedApiKey=""
             onAnalysisComplete={handleVisionAnalysis}
             onSkip={() => dispatch({ type: 'NEXT' })}
           />

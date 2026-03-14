@@ -5,15 +5,47 @@ import type { WizardState } from '@/lib/types'
 
 export async function POST(req: NextRequest) {
   const { apiKey, wizardState } = await req.json() as {
-    apiKey: string
+    apiKey?: string
     wizardState: WizardState
   }
 
+  const { system, user } = buildPrompt(wizardState)
+
+  const cmsUrl = process.env.NEXT_PUBLIC_CMS_URL
+  const cmsApiKey = process.env.CMS_API_KEY
+  const hasServerKey = process.env.NEXT_PUBLIC_HAS_SERVER_KEY === 'true'
+
+  // Try server-side generation via CMS → claude-max-proxy
+  if (hasServerKey && cmsUrl && cmsApiKey) {
+    try {
+      const cmsRes = await fetch(`${cmsUrl}/api/roaster/generate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': cmsApiKey,
+        },
+        body: JSON.stringify({ system, user }),
+      })
+
+      if (cmsRes.ok && cmsRes.body) {
+        return new Response(cmsRes.body, {
+          headers: {
+            'Content-Type': 'text/event-stream',
+            'Cache-Control': 'no-cache',
+            Connection: 'keep-alive',
+          },
+        })
+      }
+      // Fall through to BYOK if CMS call fails
+    } catch {
+      // Fall through to BYOK
+    }
+  }
+
+  // BYOK fallback — requires user-provided API key
   if (!apiKey) {
     return Response.json({ error: 'API key is required' }, { status: 400 })
   }
-
-  const { system, user } = buildPrompt(wizardState)
 
   const client = new Anthropic({ apiKey })
 
