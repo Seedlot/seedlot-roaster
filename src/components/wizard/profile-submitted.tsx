@@ -166,9 +166,14 @@ export default function ProfileSubmitted({
               </div>
             </div>
 
-            <p className="text-xs text-grey-40 text-center">
-              You can check the status of your profile anytime from the home screen under &ldquo;My Profiles&rdquo;.
-            </p>
+            <div className="text-center">
+              <a
+                href="/"
+                className="inline-block px-6 py-3 rounded-xl bg-forest text-white font-bold text-sm uppercase tracking-wider hover:bg-deep-green transition-colors"
+              >
+                View My Profiles
+              </a>
+            </div>
           </>
         )}
       </div>

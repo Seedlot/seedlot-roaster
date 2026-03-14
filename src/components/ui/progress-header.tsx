@@ -8,9 +8,8 @@ const PHASE_LABELS: Record<number, string> = {
   3: "Coffee",
   4: "Style",
   5: "Equipment",
-  6: "API Key",
-  7: "Profile",
-  8: "Feedback",
+  6: "Submitted",
+  7: "Feedback",
 }
 
 export default function ProgressHeader({ step }: { step: number }) {
