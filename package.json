@@ -11,7 +11,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.52.0",
     "@clerk/nextjs": "^7.0.1",
-    "@seedlot/roast-ui": "^0.1.0",
+    "@seedlot/roast-ui": "github:Seedlot/seedlot-roast-ui",
     "next": "16.1.6",
     "react": "19.2.3",
     "react-dom": "19.2.3",
