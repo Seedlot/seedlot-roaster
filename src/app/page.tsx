@@ -10,6 +10,7 @@ import ApiKeyInput from '@/components/wizard/api-key-input'
 import ProfileResult from '@/components/wizard/profile-result'
 import PostRoastFeedback from '@/components/wizard/post-roast-feedback'
 import ProgressHeader from '@/components/ui/progress-header'
+import AppMenu from '@/components/ui/app-menu'
 import NavButtons from '@/components/ui/nav-buttons'
 import { getSessionId } from '@/lib/session'
 import { trackSession } from '@/lib/cms'
@@ -224,6 +225,7 @@ export default function Home() {
 
   return (
     <div className="wizard-shell bg-off-white">
+      <AppMenu onHome={() => dispatch({ type: 'SET_STEP', step: 1 })} />
       <ProgressHeader step={state.step} />
 
       <div className="wizard-content">
