@@ -4,12 +4,13 @@ import { TOTAL_STEPS } from '@/lib/constants'
 
 const PHASE_LABELS: Record<number, string> = {
   1: "Welcome",
-  2: "Coffee",
-  3: "Style",
-  4: "Equipment",
-  5: "API Key",
-  6: "Profile",
-  7: "Feedback",
+  2: "Photo",
+  3: "Coffee",
+  4: "Style",
+  5: "Equipment",
+  6: "API Key",
+  7: "Profile",
+  8: "Feedback",
 }
 
 export default function ProgressHeader({ step }: { step: number }) {

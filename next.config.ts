@@ -3,6 +3,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  transpilePackages: ["@seedlot/roast-ui"],
   turbopack: {
     root: path.resolve(__dirname),
   },
@@ -24,7 +25,7 @@ const nextConfig: NextConfig = {
           },
           {
             key: "Permissions-Policy",
-            value: "camera=(), microphone=(), geolocation=()",
+            value: "camera=(self), microphone=(), geolocation=()",
           },
         ],
       },

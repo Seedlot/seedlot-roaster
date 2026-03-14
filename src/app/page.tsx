@@ -3,6 +3,7 @@
 import { useReducer, useCallback, useEffect, useRef } from 'react'
 import { useUser, SignIn } from '@clerk/nextjs'
 import Welcome from '@/components/wizard/welcome'
+import PhotoCapture from '@/components/wizard/photo-capture'
 import DescribeCoffee from '@/components/wizard/describe-coffee'
 import DefineStyle from '@/components/wizard/define-style'
 import SelectRoaster from '@/components/wizard/select-roaster'
@@ -14,7 +15,8 @@ import NavButtons from '@/components/ui/nav-buttons'
 import { getSessionId } from '@/lib/session'
 import { trackSession } from '@/lib/cms'
 import { TOTAL_STEPS } from '@/lib/constants'
-import type { WizardState, WizardAction, RoastProfile } from '@/lib/types'
+import type { WizardState, WizardAction } from '@/lib/types'
+import type { RoastProfile, VisionAnalysis, ProcessingMethod } from '@seedlot/roast-ui'
 
 const initialState: WizardState = {
   step: 1,
@@ -24,9 +26,11 @@ const initialState: WizardState = {
   processingMethod: null,
   moisture: '',
   variety: '',
+  greenCoffeePhoto: null,
+  visionAnalysis: null,
   flavorProfile: null,
-  targetNotes: '',
-  avoidNotes: '',
+  targetNotes: [],
+  avoidNotes: [],
   roaster: 'roest',
   batchSize: null,
   apiKey: '',
@@ -45,9 +49,10 @@ function reducer(state: WizardState, action: WizardAction): WizardState {
     case 'SET_PROCESSING': return { ...state, processingMethod: action.method }
     case 'SET_MOISTURE': return { ...state, moisture: action.moisture }
     case 'SET_VARIETY': return { ...state, variety: action.variety }
+    case 'SET_GREEN_PHOTO': return { ...state, greenCoffeePhoto: action.photo }
+    case 'SET_VISION_ANALYSIS': return { ...state, visionAnalysis: action.analysis }
     case 'SET_FLAVOR_PROFILE': return { ...state, flavorProfile: action.profile }
-    case 'SET_TARGET_NOTES': return { ...state, targetNotes: action.notes }
-    case 'SET_AVOID_NOTES': return { ...state, avoidNotes: action.notes }
+    case 'SET_WHEEL_NOTES': return { ...state, targetNotes: action.selected, avoidNotes: action.avoided }
     case 'SET_BATCH_SIZE': return { ...state, batchSize: action.size }
     case 'SET_API_KEY': return { ...state, apiKey: action.key }
     case 'SET_KEY_VALIDATED': return { ...state, keyValidated: action.validated }
@@ -62,12 +67,13 @@ function reducer(state: WizardState, action: WizardAction): WizardState {
 
 function canAdvance(state: WizardState): boolean {
   switch (state.step) {
-    case 1: return true
-    case 2: return state.origin !== null && state.origin.length > 0
-    case 3: return state.flavorProfile !== null
-    case 4: return state.batchSize !== null
-    case 5: return state.keyValidated
-    case 6: return state.generatedProfile !== null
+    case 1: return true // Welcome
+    case 2: return true // Photo capture (can skip)
+    case 3: return state.origin !== null && state.origin.length > 0
+    case 4: return state.flavorProfile !== null
+    case 5: return state.batchSize !== null
+    case 6: return state.keyValidated
+    case 7: return state.generatedProfile !== null
     default: return false
   }
 }
@@ -99,7 +105,7 @@ export default function Home() {
   }, [state.step])
 
   const handleNext = useCallback(() => {
-    if (state.step === 5) {
+    if (state.step === 6) {
       // Moving to generation step — clear previous profile
       dispatch({ type: 'SET_GENERATED_PROFILE', profile: null as unknown as RoastProfile })
     }
@@ -107,6 +113,36 @@ export default function Home() {
   }, [state.step])
 
   const handleBack = useCallback(() => dispatch({ type: 'BACK' }), [])
+
+  const handleVisionAnalysis = useCallback((analysis: VisionAnalysis, apiKey: string) => {
+    dispatch({ type: 'SET_VISION_ANALYSIS', analysis })
+    // Save the API key from photo step so it's pre-filled later
+    if (apiKey) {
+      dispatch({ type: 'SET_API_KEY', key: apiKey })
+      dispatch({ type: 'SET_KEY_VALIDATED', validated: true })
+    }
+    // Pre-fill coffee details from vision analysis
+    if (analysis.estimatedOrigin) {
+      dispatch({ type: 'SET_ORIGIN', origin: analysis.estimatedOrigin })
+    }
+    if (analysis.processingMethod) {
+      const method = analysis.processingMethod.toLowerCase() as ProcessingMethod
+      if (['washed', 'natural', 'honey', 'wet-hulled', 'anaerobic'].includes(method)) {
+        dispatch({ type: 'SET_PROCESSING', method })
+      }
+    }
+    if (analysis.variety) {
+      dispatch({ type: 'SET_VARIETY', variety: analysis.variety })
+    }
+    if (analysis.moistureEstimate) {
+      const moistureMatch = analysis.moistureEstimate.match(/(\d+\.?\d*)/)
+      if (moistureMatch) {
+        dispatch({ type: 'SET_MOISTURE', moisture: moistureMatch[1] })
+      }
+    }
+    // Advance to describe coffee step
+    dispatch({ type: 'NEXT' })
+  }, [])
 
   const handleProfileGenerated = useCallback((profile: RoastProfile) => {
     dispatch({ type: 'SET_GENERATED_PROFILE', profile })
@@ -140,8 +176,8 @@ export default function Home() {
           },
           style: {
             flavorProfile: state.flavorProfile || undefined,
-            targetNotes: state.targetNotes || undefined,
-            avoidNotes: state.avoidNotes || undefined,
+            targetNotes: state.targetNotes.join(', ') || undefined,
+            avoidNotes: state.avoidNotes.join(', ') || undefined,
           },
           equipment: { roaster: 'roest', batchSize: state.batchSize },
           generatedProfile: state.generatedProfile,
@@ -155,8 +191,14 @@ export default function Home() {
             predictedTotalTime: state.generatedProfile.predictedTotalTime,
             predictedDTR: state.generatedProfile.predictedDTR,
           },
+          visionAnalysis: state.visionAnalysis || undefined,
+          flavorWheelSelections: {
+            target: state.targetNotes,
+            avoided: state.avoidNotes,
+          },
+          source: 'roaster',
           aiModel: 'claude-sonnet-4-6',
-          promptVersion: 'v1.0.0',
+          promptVersion: 'v1.1.0',
         }),
       })
       if (res.ok) {
@@ -183,7 +225,9 @@ export default function Home() {
     }
   }, [])
 
-  const showNav = state.step >= 2 && state.step <= 5
+  // Steps: 1=Welcome, 2=Photo, 3=Describe, 4=Style, 5=Roaster, 6=APIKey, 7=Result, 8=Feedback
+  // But TOTAL_STEPS is still 7 for the progress bar (photo is optional / merged)
+  const showNav = state.step >= 3 && state.step <= 6
 
   return (
     <div className="wizard-shell bg-off-white">
@@ -194,6 +238,13 @@ export default function Home() {
           <Welcome onNext={() => dispatch({ type: 'NEXT' })} />
         )}
         {state.step === 2 && (
+          <PhotoCapture
+            savedApiKey={state.apiKey}
+            onAnalysisComplete={handleVisionAnalysis}
+            onSkip={() => dispatch({ type: 'NEXT' })}
+          />
+        )}
+        {state.step === 3 && (
           <DescribeCoffee
             origin={state.origin}
             region={state.region}
@@ -209,23 +260,22 @@ export default function Home() {
             onVarietyChange={(v) => dispatch({ type: 'SET_VARIETY', variety: v })}
           />
         )}
-        {state.step === 3 && (
+        {state.step === 4 && (
           <DefineStyle
             flavorProfile={state.flavorProfile}
-            targetNotes={state.targetNotes}
-            avoidNotes={state.avoidNotes}
+            selectedNotes={state.targetNotes}
+            avoidedNotes={state.avoidNotes}
             onFlavorProfileChange={(v) => dispatch({ type: 'SET_FLAVOR_PROFILE', profile: v })}
-            onTargetNotesChange={(v) => dispatch({ type: 'SET_TARGET_NOTES', notes: v })}
-            onAvoidNotesChange={(v) => dispatch({ type: 'SET_AVOID_NOTES', notes: v })}
+            onSelectionChange={(selected, avoided) => dispatch({ type: 'SET_WHEEL_NOTES', selected, avoided })}
           />
         )}
-        {state.step === 4 && (
+        {state.step === 5 && (
           <SelectRoaster
             batchSize={state.batchSize}
             onBatchSizeChange={(v) => dispatch({ type: 'SET_BATCH_SIZE', size: v })}
           />
         )}
-        {state.step === 5 && (
+        {state.step === 6 && (
           <ApiKeyInput
             apiKey={state.apiKey}
             keyValidated={state.keyValidated}
@@ -233,7 +283,7 @@ export default function Home() {
             onKeyValidated={(v) => dispatch({ type: 'SET_KEY_VALIDATED', validated: v })}
           />
         )}
-        {state.step === 6 && (
+        {state.step === 7 && (
           <>
             <ProfileResult
               state={state}
@@ -280,7 +330,7 @@ export default function Home() {
             )}
           </>
         )}
-        {state.step === 7 && (
+        {state.step === 8 && (
           <PostRoastFeedback onSubmit={handleFeedbackSubmit} />
         )}
       </div>
@@ -290,7 +340,7 @@ export default function Home() {
           onBack={handleBack}
           onNext={handleNext}
           canAdvance={canAdvance(state)}
-          nextLabel={state.step === 5 ? 'Generate Profile' : 'Next'}
+          nextLabel={state.step === 6 ? 'Generate Profile' : 'Next'}
         />
       )}
     </div>

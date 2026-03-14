@@ -1,33 +1,27 @@
 "use client"
 
-import { useState } from 'react'
-import { FLAVOR_PROFILES, COMMON_NOTES } from '@/lib/constants'
-import type { FlavorProfile } from '@/lib/types'
+import { useState, useCallback } from 'react'
+import { FlavorWheel, FLAVOR_PROFILES, getNoteLabel } from '@seedlot/roast-ui'
+import type { FlavorProfile } from '@seedlot/roast-ui'
 
 export default function DefineStyle({
   flavorProfile,
-  targetNotes,
-  avoidNotes,
+  selectedNotes,
+  avoidedNotes,
   onFlavorProfileChange,
-  onTargetNotesChange,
-  onAvoidNotesChange,
+  onSelectionChange,
 }: {
   flavorProfile: FlavorProfile | null
-  targetNotes: string
-  avoidNotes: string
+  selectedNotes: string[]
+  avoidedNotes: string[]
   onFlavorProfileChange: (v: FlavorProfile) => void
-  onTargetNotesChange: (v: string) => void
-  onAvoidNotesChange: (v: string) => void
+  onSelectionChange: (selected: string[], avoided: string[]) => void
 }) {
-  const [showTargetPicker, setShowTargetPicker] = useState(false)
-  const [showAvoidPicker, setShowAvoidPicker] = useState(false)
+  const [showWheel, setShowWheel] = useState(false)
 
-  const addNote = (current: string, note: string, onChange: (v: string) => void) => {
-    const notes = current ? current.split(', ') : []
-    if (!notes.includes(note)) {
-      onChange([...notes, note].join(', '))
-    }
-  }
+  const handleToggleWheel = useCallback(() => {
+    setShowWheel(prev => !prev)
+  }, [])
 
   return (
     <div className="px-4 py-6 sm:px-6">
@@ -36,7 +30,7 @@ export default function DefineStyle({
           Define the Style
         </h2>
         <p className="text-grey-50 text-sm text-center mb-6">
-          What flavors are you aiming for?
+          Choose a flavor direction, then fine-tune with the flavor wheel.
         </p>
 
         {/* Flavor Profile Cards */}
@@ -44,7 +38,7 @@ export default function DefineStyle({
           {FLAVOR_PROFILES.map(fp => (
             <button
               key={fp.id}
-              onClick={() => onFlavorProfileChange(fp.id as FlavorProfile)}
+              onClick={() => onFlavorProfileChange(fp.id)}
               className={`w-full p-4 rounded-xl border-2 text-left transition-all flex items-center justify-between ${
                 flavorProfile === fp.id ? fp.activeColor : fp.color
               }`}
@@ -60,73 +54,65 @@ export default function DefineStyle({
           ))}
         </div>
 
-        {/* Target notes */}
+        {/* Flavor Wheel Toggle */}
         <div className="mb-4">
-          <label className="block text-sm font-medium text-grey-70 mb-1">
-            Specific notes to target <span className="text-grey-40">(optional)</span>
-          </label>
-          <div className="relative">
-            <input
-              type="text"
-              value={targetNotes}
-              onChange={(e) => onTargetNotesChange(e.target.value)}
-              onFocus={() => setShowTargetPicker(true)}
-              onBlur={() => setTimeout(() => setShowTargetPicker(false), 200)}
-              placeholder="e.g. Blueberry, Jasmine, Honey"
-              className="w-full px-4 py-3 rounded-xl border border-grey-20 bg-white text-charcoal focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
-            />
-            {showTargetPicker && (
-              <div className="absolute z-10 w-full mt-1 bg-white border border-grey-20 rounded-xl shadow-lg p-3 max-h-32 overflow-y-auto">
-                <div className="flex flex-wrap gap-1.5">
-                  {COMMON_NOTES.map(note => (
-                    <button
-                      key={note}
-                      onMouseDown={(e) => e.preventDefault()}
-                      onClick={() => addNote(targetNotes, note, onTargetNotesChange)}
-                      className="px-2.5 py-1 text-xs rounded-full border border-grey-20 hover:border-accent hover:bg-accent/5 transition-colors"
-                    >
-                      {note}
-                    </button>
-                  ))}
-                </div>
-              </div>
+          <button
+            onClick={handleToggleWheel}
+            className="w-full py-3 rounded-xl border-2 border-dashed border-grey-20 text-sm font-medium text-grey-60 hover:border-accent hover:text-charcoal transition-colors flex items-center justify-center gap-2"
+            type="button"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="text-grey-40">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5"/>
+              <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10" stroke="currentColor" strokeWidth="1.5"/>
+              <line x1="12" y1="2" x2="12" y2="22" stroke="currentColor" strokeWidth="1" opacity="0.3"/>
+              <line x1="2" y1="12" x2="22" y2="12" stroke="currentColor" strokeWidth="1" opacity="0.3"/>
+            </svg>
+            {showWheel ? 'Hide Flavor Wheel' : 'Fine-tune with Flavor Wheel'}
+            {(selectedNotes.length > 0 || avoidedNotes.length > 0) && (
+              <span className="text-xs text-accent ml-1">
+                ({selectedNotes.length} target, {avoidedNotes.length} avoid)
+              </span>
             )}
-          </div>
+          </button>
         </div>
 
-        {/* Avoid notes */}
-        <div>
-          <label className="block text-sm font-medium text-grey-70 mb-1">
-            Notes to avoid <span className="text-grey-40">(optional)</span>
-          </label>
-          <div className="relative">
-            <input
-              type="text"
-              value={avoidNotes}
-              onChange={(e) => onAvoidNotesChange(e.target.value)}
-              onFocus={() => setShowAvoidPicker(true)}
-              onBlur={() => setTimeout(() => setShowAvoidPicker(false), 200)}
-              placeholder="e.g. Smoky, Burnt, Astringent"
-              className="w-full px-4 py-3 rounded-xl border border-grey-20 bg-white text-charcoal focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+        {/* Flavor Wheel */}
+        {showWheel && (
+          <div className="mb-6 p-4 rounded-2xl bg-white border border-grey-10">
+            <FlavorWheel
+              selectedNotes={selectedNotes}
+              avoidedNotes={avoidedNotes}
+              onSelectionChange={onSelectionChange}
+              maxSelections={5}
             />
-            {showAvoidPicker && (
-              <div className="absolute z-10 w-full mt-1 bg-white border border-grey-20 rounded-xl shadow-lg p-3 max-h-32 overflow-y-auto">
-                <div className="flex flex-wrap gap-1.5">
-                  {['Smoky', 'Burnt', 'Astringent', 'Bitter', 'Sour', 'Baked', 'Flat', 'Rubbery', 'Fermented', 'Grassy', 'Papery', 'Woody'].map(note => (
-                    <button
-                      key={note}
-                      onMouseDown={(e) => e.preventDefault()}
-                      onClick={() => addNote(avoidNotes, note, onAvoidNotesChange)}
-                      className="px-2.5 py-1 text-xs rounded-full border border-grey-20 hover:border-terracotta hover:bg-terracotta/5 transition-colors"
-                    >
-                      {note}
-                    </button>
-                  ))}
-                </div>
+          </div>
+        )}
+
+        {/* Selected notes summary (shown when wheel is hidden) */}
+        {!showWheel && (selectedNotes.length > 0 || avoidedNotes.length > 0) && (
+          <div className="space-y-2">
+            {selectedNotes.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                <span className="text-xs text-grey-50 mr-1 self-center">Target:</span>
+                {selectedNotes.map(id => (
+                  <span key={id} className="px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-800 border border-green-200">
+                    + {getNoteLabel(id)}
+                  </span>
+                ))}
+              </div>
+            )}
+            {avoidedNotes.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                <span className="text-xs text-grey-50 mr-1 self-center">Avoid:</span>
+                {avoidedNotes.map(id => (
+                  <span key={id} className="px-2 py-0.5 text-xs rounded-full bg-red-100 text-red-800 border border-red-200">
+                    - {getNoteLabel(id)}
+                  </span>
+                ))}
               </div>
             )}
           </div>
-        </div>
+        )}
       </div>
     </div>
   )
