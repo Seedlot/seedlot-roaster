@@ -6,8 +6,7 @@ import PhotoCapture from '@/components/wizard/photo-capture'
 import DescribeCoffee from '@/components/wizard/describe-coffee'
 import DefineStyle from '@/components/wizard/define-style'
 import SelectRoaster from '@/components/wizard/select-roaster'
-import ApiKeyInput from '@/components/wizard/api-key-input'
-import ProfileResult from '@/components/wizard/profile-result'
+import ProfileSubmitted from '@/components/wizard/profile-submitted'
 import PostRoastFeedback from '@/components/wizard/post-roast-feedback'
 import ProgressHeader from '@/components/ui/progress-header'
 import AppMenu from '@/components/ui/app-menu'
@@ -16,7 +15,7 @@ import { getSessionId } from '@/lib/session'
 import { trackSession } from '@/lib/cms'
 import { TOTAL_STEPS } from '@/lib/constants'
 import type { WizardState, WizardAction } from '@/lib/types'
-import type { RoastProfile, VisionAnalysis, ProcessingMethod } from '@seedlot/roast-ui'
+import type { VisionAnalysis, ProcessingMethod } from '@seedlot/roast-ui'
 
 const initialState: WizardState = {
   step: 1,
@@ -72,8 +71,6 @@ function canAdvance(state: WizardState): boolean {
     case 3: return state.origin !== null && state.origin.length > 0
     case 4: return state.flavorProfile !== null
     case 5: return state.batchSize !== null
-    case 6: return state.keyValidated
-    case 7: return state.generatedProfile !== null
     default: return false
   }
 }
@@ -103,19 +100,11 @@ export default function Home() {
     stepStartRef.current = now
   }, [state.step])
 
-  const handleNext = useCallback(() => {
-    if (state.step === 6) {
-      // Moving to generation step — clear previous profile
-      dispatch({ type: 'SET_GENERATED_PROFILE', profile: null as unknown as RoastProfile })
-    }
-    dispatch({ type: 'NEXT' })
-  }, [state.step])
-
+  const handleNext = useCallback(() => dispatch({ type: 'NEXT' }), [])
   const handleBack = useCallback(() => dispatch({ type: 'BACK' }), [])
 
   const handleVisionAnalysis = useCallback((analysis: VisionAnalysis) => {
     dispatch({ type: 'SET_VISION_ANALYSIS', analysis })
-    // Pre-fill coffee details from vision analysis
     if (analysis.estimatedOrigin) {
       dispatch({ type: 'SET_ORIGIN', origin: analysis.estimatedOrigin })
     }
@@ -134,74 +123,8 @@ export default function Home() {
         dispatch({ type: 'SET_MOISTURE', moisture: moistureMatch[1] })
       }
     }
-    // Advance to describe coffee step
     dispatch({ type: 'NEXT' })
   }, [])
-
-  const handleProfileGenerated = useCallback((profile: RoastProfile) => {
-    dispatch({ type: 'SET_GENERATED_PROFILE', profile })
-    trackSession(sessionIdRef.current, {
-      profileGenerated: true,
-      generationCount: 1,
-    })
-  }, [])
-
-  const handleGenerationError = useCallback((error: string) => {
-    dispatch({ type: 'SET_GENERATION_ERROR', error })
-  }, [])
-
-  const handleSaveProfile = useCallback(async () => {
-    if (!state.generatedProfile) return
-
-    try {
-      const res = await fetch('/api/save-profile', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sessionId: sessionIdRef.current,
-          profileName: state.generatedProfile.name,
-          coffee: {
-            origin: state.origin,
-            region: state.region || undefined,
-            altitude: state.altitude ? Number(state.altitude) : undefined,
-            processingMethod: state.processingMethod || undefined,
-            moisture: state.moisture ? Number(state.moisture) : undefined,
-            variety: state.variety || undefined,
-          },
-          style: {
-            flavorProfile: state.flavorProfile || undefined,
-            targetNotes: state.targetNotes.join(', ') || undefined,
-            avoidNotes: state.avoidNotes.join(', ') || undefined,
-          },
-          equipment: { roaster: 'roest', batchSize: state.batchSize },
-          generatedProfile: state.generatedProfile,
-          curveData: state.generatedProfile.curve,
-          machineSettings: {
-            power: state.generatedProfile.settings.power,
-            fan: state.generatedProfile.settings.fan,
-            drumRPM: state.generatedProfile.settings.drumRPM,
-            chargeTemp: state.generatedProfile.chargeTemp,
-            endTemp: state.generatedProfile.endTemp,
-            predictedTotalTime: state.generatedProfile.predictedTotalTime,
-            predictedDTR: state.generatedProfile.predictedDTR,
-          },
-          visionAnalysis: state.visionAnalysis || undefined,
-          flavorWheelSelections: {
-            target: state.targetNotes,
-            avoided: state.avoidNotes,
-          },
-          source: 'roaster',
-          aiModel: 'claude-sonnet-4-6',
-          promptVersion: 'v1.1.0',
-        }),
-      })
-      if (res.ok) {
-        trackSession(sessionIdRef.current, { profileSaved: true })
-      }
-    } catch {
-      // best-effort
-    }
-  }, [state])
 
   const handleFeedbackSubmit = useCallback(async (data: Parameters<typeof import('@/components/wizard/post-roast-feedback').default>[0]['onSubmit'] extends (data: infer D) => void ? D : never) => {
     try {
@@ -219,9 +142,8 @@ export default function Home() {
     }
   }, [])
 
-  // Steps: 1=Welcome, 2=Photo, 3=Describe, 4=Style, 5=Roaster, 6=APIKey, 7=Result, 8=Feedback
-  // But TOTAL_STEPS is still 7 for the progress bar (photo is optional / merged)
-  const showNav = state.step >= 3 && state.step <= 6
+  // Steps: 1=Welcome, 2=Photo, 3=Describe, 4=Style, 5=Roaster, 6=Submitted, 7=Feedback
+  const showNav = state.step >= 3 && state.step <= 5
 
   return (
     <div className="wizard-shell bg-off-white">
@@ -271,48 +193,12 @@ export default function Home() {
           />
         )}
         {state.step === 6 && (
-          <ApiKeyInput
-            apiKey={state.apiKey}
-            keyValidated={state.keyValidated}
-            onApiKeyChange={(v) => dispatch({ type: 'SET_API_KEY', key: v })}
-            onKeyValidated={(v) => dispatch({ type: 'SET_KEY_VALIDATED', validated: v })}
+          <ProfileSubmitted
+            state={state}
+            sessionId={sessionIdRef.current}
           />
         )}
         {state.step === 7 && (
-          <>
-            <ProfileResult
-              state={state}
-              onProfileGenerated={handleProfileGenerated}
-              onError={handleGenerationError}
-            />
-            {state.generatedProfile && (
-              <div className="px-4 pb-6 sm:px-6 no-print">
-                <div className="max-w-2xl mx-auto">
-                  {state.generationError && (
-                    <div className="p-4 bg-red-50 border border-red-200 rounded-xl mb-4 text-sm text-red-700">
-                      {state.generationError}
-                    </div>
-                  )}
-                  <div className="flex gap-3">
-                    <button
-                      onClick={handleSaveProfile}
-                      className="flex-1 py-3 rounded-xl bg-forest text-white font-bold text-sm uppercase tracking-wider hover:bg-deep-green transition-colors"
-                    >
-                      Save Profile
-                    </button>
-                    <button
-                      onClick={handleNext}
-                      className="flex-1 py-3 rounded-xl border border-grey-20 text-grey-60 font-medium text-sm hover:bg-grey-5 transition-colors"
-                    >
-                      Log Roast Results
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-          </>
-        )}
-        {state.step === 8 && (
           <PostRoastFeedback onSubmit={handleFeedbackSubmit} />
         )}
       </div>
@@ -322,7 +208,7 @@ export default function Home() {
           onBack={handleBack}
           onNext={handleNext}
           canAdvance={canAdvance(state)}
-          nextLabel={state.step === 6 ? 'Generate Profile' : 'Next'}
+          nextLabel={state.step === 5 ? 'Submit Profile' : 'Next'}
         />
       )}
     </div>

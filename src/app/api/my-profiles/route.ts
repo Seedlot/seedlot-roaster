@@ -10,10 +10,23 @@ export async function GET() {
     return NextResponse.json({ profiles: [] })
   }
 
-  // roast-profiles has read: () => true, so public REST API works
-  // Query by clerkId which matches the Clerk userId
+  // First find the CMS user by clerkId, then query profiles by userId relationship
+  const userRes = await cmsFetch(
+    `${CMS_URL}/api/users?where[clerkId][equals]=${encodeURIComponent(userId)}&limit=1&depth=0`,
+  )
+
+  if (!userRes.ok) {
+    return NextResponse.json({ profiles: [] })
+  }
+
+  const userData = await userRes.json()
+  const cmsUserId = userData.docs?.[0]?.id
+  if (!cmsUserId) {
+    return NextResponse.json({ profiles: [] })
+  }
+
   const res = await cmsFetch(
-    `${CMS_URL}/api/roast-profiles?where[clerkId][equals]=${encodeURIComponent(userId)}&sort=-createdAt&limit=50&depth=0`,
+    `${CMS_URL}/api/roast-profiles?where[userId][equals]=${cmsUserId}&sort=-createdAt&limit=50&depth=0`,
   )
 
   if (!res.ok) {

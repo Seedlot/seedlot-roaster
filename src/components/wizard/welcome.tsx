@@ -10,6 +10,8 @@ type SavedProfile = {
   coffee: { origin: string; processingMethod?: string }
   equipment: { batchSize?: string }
   style: { flavorProfile?: string }
+  pipelineStatus: string | null
+  generationStatus: string | null
   createdAt: string
 }
 
@@ -191,24 +193,54 @@ export default function Welcome({ onNext }: { onNext: () => void }) {
             </div>
           ) : (
             <div className="space-y-3">
-              {profiles.map(p => (
-                <Link
-                  key={p.id}
-                  href={`/profile/${p.id}`}
-                  className="block bg-white p-4 rounded-xl border border-grey-10 hover:border-grey-20 transition-colors"
-                >
-                  <div className="font-semibold text-charcoal">{p.profileName}</div>
-                  <div className="text-sm text-grey-50 mt-1">
-                    {p.coffee?.origin}
-                    {p.coffee?.processingMethod && <> &middot; {p.coffee.processingMethod}</>}
-                    {p.equipment?.batchSize && <> &middot; {p.equipment.batchSize}g</>}
-                    {p.style?.flavorProfile && <> &middot; {p.style.flavorProfile}</>}
+              {profiles.map(p => {
+                const isReady = p.pipelineStatus && p.pipelineStatus !== 'pending_generation'
+                const isPending = p.pipelineStatus === 'pending_generation'
+
+                const content = (
+                  <>
+                    <div className="flex items-center justify-between">
+                      <div className="font-semibold text-charcoal">{p.profileName}</div>
+                      {isPending && (
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-medium">
+                          Generating...
+                        </span>
+                      )}
+                      {isReady && (
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-medium">
+                          Ready
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-sm text-grey-50 mt-1">
+                      {p.coffee?.origin}
+                      {p.coffee?.processingMethod && <> &middot; {p.coffee.processingMethod}</>}
+                      {p.equipment?.batchSize && <> &middot; {p.equipment.batchSize}g</>}
+                      {p.style?.flavorProfile && <> &middot; {p.style.flavorProfile}</>}
+                    </div>
+                    <div className="text-xs text-grey-40 mt-1">
+                      {new Date(p.createdAt).toLocaleDateString()}
+                    </div>
+                  </>
+                )
+
+                return isReady ? (
+                  <Link
+                    key={p.id}
+                    href={`/profile/${p.id}`}
+                    className="block bg-white p-4 rounded-xl border border-grey-10 hover:border-grey-20 transition-colors"
+                  >
+                    {content}
+                  </Link>
+                ) : (
+                  <div
+                    key={p.id}
+                    className="bg-white p-4 rounded-xl border border-grey-10 opacity-80"
+                  >
+                    {content}
                   </div>
-                  <div className="text-xs text-grey-40 mt-1">
-                    {new Date(p.createdAt).toLocaleDateString()}
-                  </div>
-                </Link>
-              ))}
+                )
+              })}
             </div>
           )}
         </div>

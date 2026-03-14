@@ -32,5 +32,5 @@ export const BATCH_SIZES = [
   { id: '200', label: '200g', description: 'Large batch (uses inlet temperature)' },
 ] as const
 
-export const TOTAL_STEPS = 8
+export const TOTAL_STEPS = 7
 export const PROMPT_VERSION = 'v1.1.0'
