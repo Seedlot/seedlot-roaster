@@ -1,0 +1,35 @@
+name: Claude Code Review
+on:
+  pull_request:
+    types: [opened, synchronize]
+  issue_comment:
+    types: [created]
+
+jobs:
+  review:
+    if: |
+      (github.event_name == 'pull_request') ||
+      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude'))
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+    steps:
+      - uses: anthropics/claude-code-action@v1
+        with:
+          model: claude-sonnet-4-6
+          anthropic_api_key: ${{ secrets.CLAUDE_OAUTH_TOKEN }}
+          review_comment: |
+            Review this PR for roast.seedlot.io (Next.js AI roast profile wizard).
+
+            Priority checks:
+            1. **API key handling**: User Anthropic API keys must NEVER be stored or logged, session-only
+            2. **Meta tags**: Pages must have <title>, <meta description>, og:title, og:description, canonical
+            3. **Structured data**: Product/SoftwareApplication JSON-LD where applicable
+            4. **@seedlot/roast-ui**: Shared package imports must use correct exports
+            5. **Roast profile schema**: Changes to profile types must be backward compatible
+            6. **ROEST format**: Any changes to ROEST export must maintain valid bezier format
+            7. **Performance**: Recharts and flavor wheel components should not cause layout shifts
+
+            For engine-improvement PRs: verify scope is micro (<10 files, <500 lines changed).
