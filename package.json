@@ -14,6 +14,7 @@
     "@google/generative-ai": "^0.24.1",
     "@seedlot/roast-ui": "github:Seedlot/seedlot-roast-ui",
     "next": "16.1.6",
+    "posthog-js": "^1.363.1",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "recharts": "^2.15.3",

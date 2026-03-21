@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { ClerkProvider } from '@clerk/nextjs'
 import { Bayon, Kumbh_Sans } from "next/font/google"
+import { PostHogProvider } from "@/components/PostHogProvider"
 import "./globals.css"
 
 const bayon = Bayon({
@@ -38,7 +39,9 @@ export default function RootLayout({
         className={`${bayon.variable} ${kumbhSans.variable} font-body antialiased`}
       >
         <ClerkProvider>
-          {children}
+          <PostHogProvider>
+            {children}
+          </PostHogProvider>
         </ClerkProvider>
       </body>
     </html>
