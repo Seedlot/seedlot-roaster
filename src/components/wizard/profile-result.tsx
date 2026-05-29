@@ -35,7 +35,7 @@ export default function ProfileResult({
       const res = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ apiKey: state.apiKey, wizardState: state }),
+        body: JSON.stringify({ wizardState: state }),
       })
 
       if (!res.ok) {

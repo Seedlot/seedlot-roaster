@@ -20,10 +20,7 @@ export type WizardState = {
   // Step 4: Equipment
   roaster: 'roest'
   batchSize: BatchSize | null
-  // Step 5: API key
-  apiKey: string
-  keyValidated: boolean
-  // Step 6: Generated profile
+  // Step 5: Generated profile
   generatedProfile: RoastProfile | null
   generating: boolean
   generationError: string | null
@@ -42,8 +39,6 @@ export type WizardAction =
   | { type: 'SET_FLAVOR_PROFILE'; profile: FlavorProfile }
   | { type: 'SET_WHEEL_NOTES'; selected: string[]; avoided: string[] }
   | { type: 'SET_BATCH_SIZE'; size: BatchSize }
-  | { type: 'SET_API_KEY'; key: string }
-  | { type: 'SET_KEY_VALIDATED'; validated: boolean }
   | { type: 'SET_GENERATED_PROFILE'; profile: RoastProfile }
   | { type: 'SET_GENERATING'; generating: boolean }
   | { type: 'SET_GENERATION_ERROR'; error: string | null }

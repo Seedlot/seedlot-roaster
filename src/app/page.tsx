@@ -32,8 +32,6 @@ const initialState: WizardState = {
   avoidNotes: [],
   roaster: 'roest',
   batchSize: null,
-  apiKey: '',
-  keyValidated: false,
   generatedProfile: null,
   generating: false,
   generationError: null,
@@ -53,8 +51,6 @@ function reducer(state: WizardState, action: WizardAction): WizardState {
     case 'SET_FLAVOR_PROFILE': return { ...state, flavorProfile: action.profile }
     case 'SET_WHEEL_NOTES': return { ...state, targetNotes: action.selected, avoidNotes: action.avoided }
     case 'SET_BATCH_SIZE': return { ...state, batchSize: action.size }
-    case 'SET_API_KEY': return { ...state, apiKey: action.key }
-    case 'SET_KEY_VALIDATED': return { ...state, keyValidated: action.validated }
     case 'SET_GENERATED_PROFILE': return { ...state, generatedProfile: action.profile, generating: false, generationError: null }
     case 'SET_GENERATING': return { ...state, generating: action.generating }
     case 'SET_GENERATION_ERROR': return { ...state, generationError: action.error, generating: false }
@@ -156,7 +152,6 @@ export default function Home() {
         )}
         {state.step === 2 && (
           <PhotoCapture
-            savedApiKey=""
             onAnalysisComplete={handleVisionAnalysis}
             onSkip={() => dispatch({ type: 'NEXT' })}
           />

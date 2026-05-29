@@ -4,9 +4,9 @@ import { useState, useRef, useCallback } from 'react'
 import type { VisionAnalysis } from '@seedlot/roast-ui'
 
 type PhotoCaptureProps = {
-  onAnalysisComplete: (analysis: VisionAnalysis, apiKey: string) => void
+  onAnalysisComplete: (analysis: VisionAnalysis) => void
   onSkip: () => void
-  savedApiKey: string
+  savedApiKey?: string
 }
 
 export default function PhotoCapture({ onAnalysisComplete, onSkip }: PhotoCaptureProps) {
@@ -51,7 +51,7 @@ export default function PhotoCapture({ onAnalysisComplete, onSkip }: PhotoCaptur
       }
 
       const analysis: VisionAnalysis = await res.json()
-      onAnalysisComplete(analysis, '')
+      onAnalysisComplete(analysis)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to analyze photo')
     } finally {
