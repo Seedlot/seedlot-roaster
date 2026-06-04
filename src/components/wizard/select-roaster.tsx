@@ -4,6 +4,12 @@ import CardSelect from '@/components/ui/card-select'
 import { BATCH_SIZES } from '@/lib/constants'
 import type { BatchSize } from '@/lib/types'
 
+const batchSizeOptions = BATCH_SIZES as readonly {
+  id: BatchSize
+  label: string
+  description: string
+}[]
+
 export default function SelectRoaster({
   batchSize,
   onBatchSizeChange,
@@ -16,6 +22,10 @@ export default function SelectRoaster({
     { id: 'aillio', label: 'Aillio Bullet', description: 'Home drum roaster', disabled: true, disabledLabel: 'Coming Soon' },
     { id: 'ikawa', label: 'Ikawa', description: 'Air roaster', disabled: true, disabledLabel: 'Coming Soon' },
   ]
+  const selectedBatchSize = batchSize ?? '100'
+  const selectedBatch = batchSizeOptions.find((option) => option.id === selectedBatchSize) || batchSizeOptions[1]
+  const selectedBatchNumber = Number(selectedBatch.id)
+  const profileType = selectedBatch.id === '200' ? 'Bean / inlet temperature' : 'Air temperature'
 
   return (
     <div className="px-4 py-6 sm:px-6">
@@ -37,21 +47,62 @@ export default function SelectRoaster({
           />
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-grey-70 mb-2">Batch Size</label>
-          <CardSelect
-            options={BATCH_SIZES as unknown as { id: string; label: string; description: string }[]}
-            selected={batchSize}
-            onSelect={(id) => onBatchSizeChange(id as BatchSize)}
-            columns={3}
+        <div className="bg-white border border-grey-10 rounded-xl p-4 sm:p-5">
+          <div className="flex items-start justify-between gap-4 mb-4">
+            <div>
+              <label htmlFor="batch-weight" className="block text-sm font-medium text-grey-70">
+                Batch Weight
+              </label>
+              <p className="text-xs text-grey-50 mt-1">
+                Snaps to ROEST-safe 50g intervals.
+              </p>
+            </div>
+            <div className="text-right shrink-0">
+              <div className="font-heading text-3xl text-charcoal leading-none">{selectedBatch.label}</div>
+              <div className="text-xs text-grey-50 mt-1">{profileType}</div>
+            </div>
+          </div>
+
+          <input
+            id="batch-weight"
+            type="range"
+            min="50"
+            max="200"
+            step="50"
+            value={selectedBatchNumber}
+            onChange={(event) => onBatchSizeChange(String(event.currentTarget.value) as BatchSize)}
+            className="w-full accent-forest"
+            aria-valuetext={`${selectedBatch.label} ${profileType}`}
           />
+
+          <div className="grid grid-cols-4 text-xs text-grey-50 mt-3">
+            {batchSizeOptions.map((option) => (
+              <button
+                key={option.id}
+                type="button"
+                onClick={() => onBatchSizeChange(option.id)}
+                className={`text-center py-1 rounded-md transition-colors ${
+                  option.id === selectedBatch.id
+                    ? 'font-semibold text-forest bg-accent/20'
+                    : 'hover:bg-grey-5'
+                }`}
+                aria-pressed={option.id === selectedBatch.id}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+
+          <p className="text-sm text-grey-60 mt-4">
+            {selectedBatch.description}
+          </p>
         </div>
 
-        {batchSize === '200' && (
-          <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-xl">
-            <p className="text-sm text-amber-800">
+        {selectedBatch.id === '200' && (
+          <div className="mt-4 p-4 bg-terracotta/10 border border-terracotta/30 rounded-xl">
+            <p className="text-sm text-terracotta-dark">
               <strong>Note:</strong> 200g batches use <strong>inlet temperature</strong> profiles instead of air temperature.
-              This is due to the thermal mass feedback loop at higher batch sizes — air temp profiles become unstable.
+              This is due to the thermal mass feedback loop at higher batch sizes - air temp profiles become unstable.
               The generated curve will use inlet temperature values.
             </p>
           </div>

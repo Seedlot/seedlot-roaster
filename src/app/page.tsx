@@ -1,6 +1,6 @@
 "use client"
 
-import { useReducer, useCallback, useEffect, useRef } from 'react'
+import { useReducer, useCallback, useEffect, useRef, useState } from 'react'
 import Welcome from '@/components/wizard/welcome'
 import PhotoCapture from '@/components/wizard/photo-capture'
 import DescribeCoffee from '@/components/wizard/describe-coffee'
@@ -31,7 +31,7 @@ const initialState: WizardState = {
   targetNotes: [],
   avoidNotes: [],
   roaster: 'roest',
-  batchSize: null,
+  batchSize: '100',
   generatedProfile: null,
   generating: false,
   generationError: null,
@@ -73,11 +73,14 @@ function canAdvance(state: WizardState): boolean {
 
 export default function Home() {
   const [state, dispatch] = useReducer(reducer, initialState)
+  const [sessionId, setSessionId] = useState('')
   const sessionIdRef = useRef<string>('')
-  const stepStartRef = useRef<number>(Date.now())
+  const stepStartRef = useRef<number>(0)
 
   useEffect(() => {
+    stepStartRef.current = Date.now()
     sessionIdRef.current = getSessionId()
+    setSessionId(sessionIdRef.current)
     trackSession(sessionIdRef.current, {
       stepsCompleted: 0,
       userAgent: navigator.userAgent,
@@ -190,7 +193,7 @@ export default function Home() {
         {state.step === 6 && (
           <ProfileSubmitted
             state={state}
-            sessionId={sessionIdRef.current}
+            sessionId={sessionId}
           />
         )}
         {state.step === 7 && (

@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import type { WizardState } from '@/lib/types'
 import { FLAVOR_PROFILES } from '@/lib/constants'
 
@@ -167,12 +168,12 @@ export default function ProfileSubmitted({
             </div>
 
             <div className="text-center">
-              <a
-                href="/"
+              <Link
+                href="/my-profiles"
                 className="inline-block px-6 py-3 rounded-xl bg-forest text-white font-bold text-sm uppercase tracking-wider hover:bg-deep-green transition-colors"
               >
                 View My Profiles
-              </a>
+              </Link>
             </div>
           </>
         )}

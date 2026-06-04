@@ -1,5 +1,7 @@
-export type { FlavorProfile, ProcessingMethod, BatchSize, CurvePoint, RoastProfile, CuppingScores, VisionAnalysis } from '@seedlot/roast-ui'
-import type { FlavorProfile, ProcessingMethod, BatchSize, RoastProfile, VisionAnalysis } from '@seedlot/roast-ui'
+export type { FlavorProfile, ProcessingMethod, CurvePoint, RoastProfile, CuppingScores, VisionAnalysis } from '@seedlot/roast-ui'
+import type { FlavorProfile, ProcessingMethod, RoastProfile, VisionAnalysis } from '@seedlot/roast-ui'
+
+export type BatchSize = '50' | '100' | '150' | '200'
 
 export type WizardState = {
   step: number

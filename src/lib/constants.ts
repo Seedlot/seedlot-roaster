@@ -32,5 +32,12 @@ export const BATCH_SIZES = [
   { id: '200', label: '200g', description: 'Large batch (uses inlet temperature)' },
 ] as const
 
+export const VALID_BATCH_SIZES = ['50', '100', '150', '200'] as const
+export type ValidBatchSize = typeof VALID_BATCH_SIZES[number]
+
+export function isValidBatchSize(value: unknown): value is ValidBatchSize {
+  return typeof value === 'string' && VALID_BATCH_SIZES.includes(value as ValidBatchSize)
+}
+
 export const TOTAL_STEPS = 7
-export const PROMPT_VERSION = 'v1.1.0'
+export const PROMPT_VERSION = 'v1.2.0'

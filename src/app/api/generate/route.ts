@@ -1,11 +1,19 @@
 import { NextRequest } from 'next/server'
 import { buildPrompt } from '@/lib/prompt-builder'
 import { cmsFetch } from '@/lib/cms-fetch'
+import { isValidBatchSize } from '@/lib/constants'
 import type { WizardState } from '@/lib/types'
 
 export async function POST(req: NextRequest) {
   const { wizardState } = await req.json() as {
     wizardState: WizardState
+  }
+
+  if (!isValidBatchSize(wizardState?.batchSize)) {
+    return Response.json(
+      { error: 'Batch size must be one of 50g, 100g, 150g, or 200g' },
+      { status: 400 },
+    )
   }
 
   const { system, user } = buildPrompt(wizardState)

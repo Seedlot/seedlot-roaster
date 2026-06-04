@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import type { WizardState, RoastProfile } from '@/lib/types'
 import { parseProfile } from '@/lib/profile-parser'
+import { validateRoastProfileForBatch } from '@/lib/profile-validation'
 import { toRoestJSON, profileToClipboard } from '@/lib/roest-export'
 import TemperatureCurve from '@/components/profile/temperature-curve'
 import MachineSettings from '@/components/profile/machine-settings'
@@ -39,7 +40,8 @@ export default function ProfileResult({
       })
 
       if (!res.ok) {
-        throw new Error(`API error: ${res.status}`)
+        const errorBody = await res.json().catch(() => null) as { error?: string } | null
+        throw new Error(errorBody?.error || `API error: ${res.status}`)
       }
 
       const reader = res.body?.getReader()
@@ -72,6 +74,7 @@ export default function ProfileResult({
           if (data.done) {
             try {
               const parsed = parseProfile(fullText)
+              validateRoastProfileForBatch(parsed, state.batchSize)
               setProfile(parsed)
               onProfileGenerated(parsed)
             } catch (e) {
@@ -112,7 +115,7 @@ export default function ProfileResult({
 
   const handleCopy = async () => {
     if (!profile) return
-    await navigator.clipboard.writeText(profileToClipboard(profile))
+    await navigator.clipboard.writeText(profileToClipboard(profile, state.batchSize || undefined))
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
@@ -123,6 +126,7 @@ export default function ProfileResult({
     generatingRef.current = false
     generate()
   }
+  const isBeanInletProfile = state.batchSize === '200'
 
   // Streaming state
   if (!profile && !done) {
@@ -183,7 +187,12 @@ export default function ProfileResult({
             <thead className="bg-grey-5 border-b border-grey-10">
               <tr>
                 <th className="px-4 py-2 text-left text-xs font-medium text-grey-50">Time</th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-grey-50">Temp (°C)</th>
+                {isBeanInletProfile && (
+                  <th className="px-4 py-2 text-left text-xs font-medium text-grey-50">Bean (°C)</th>
+                )}
+                <th className="px-4 py-2 text-left text-xs font-medium text-grey-50">
+                  {isBeanInletProfile ? 'Inlet (°C)' : 'Air (°C)'}
+                </th>
                 <th className="px-4 py-2 text-left text-xs font-medium text-grey-50">Phase</th>
               </tr>
             </thead>
@@ -191,6 +200,11 @@ export default function ProfileResult({
               {profile.curve.map((p, i) => (
                 <tr key={i} className="border-b border-grey-10 last:border-0">
                   <td className="px-4 py-2 font-mono">{p.time}</td>
+                  {isBeanInletProfile && (
+                    <td className="px-4 py-2 font-mono">
+                      {(p as { beanTempC?: number }).beanTempC}°C
+                    </td>
+                  )}
                   <td className="px-4 py-2 font-mono">{p.tempC}°C</td>
                   <td className="px-4 py-2 text-grey-60">{p.phase}</td>
                 </tr>

@@ -100,7 +100,7 @@ export default function PhotoCapture({ onAnalysisComplete, onSkip }: PhotoCaptur
               className="w-full py-3 text-sm text-grey-50 hover:text-charcoal transition-colors"
               type="button"
             >
-              Skip — I'll enter details manually
+              Skip - I&apos;ll enter details manually
             </button>
           </div>
         ) : (
