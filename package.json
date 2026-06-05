@@ -1,12 +1,12 @@
 {
-  "name": "seedlot-roaster",
+  "name": "seedlot-roaster-deprecated",
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --port 3009",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint"
+    "dev": "node scripts/deprecated-build-guard.js",
+    "build": "node scripts/deprecated-build-guard.js",
+    "start": "node scripts/deprecated-build-guard.js",
+    "lint": "node -e \"console.log('seedlot-roaster is deprecated; lint is intentionally disabled. Use external/seedlot-roastery-os for roast.seedlot.io work.')\""
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.52.0",
