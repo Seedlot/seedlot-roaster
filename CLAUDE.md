@@ -1,4 +1,15 @@
-# Seedlot Roaster - Claude Context
+# DEPRECATED - Seedlot Roaster
+
+This application is retired and must not be deployed.
+
+Production `https://roast.seedlot.io` is Seedlot Roastery OS, maintained in:
+
+- Local workspace: `../seedlot-roastery-os`
+- GitHub repo: `Seedlot/seedlot-roastery-os`
+
+Do not run `vercel deploy`, `npm run build`, or production work from this repository. The package scripts intentionally fail to prevent replacing Roastery OS with the old mini app.
+
+# Historical Seedlot Roaster Context
 
 ## Project Overview
 

@@ -32,6 +32,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# clerk local keyless/dev config
+.clerk/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
